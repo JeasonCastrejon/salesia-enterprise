@@ -1,5 +1,5 @@
 import axios from "axios";
-
+// @ts-ignore
 const API = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
 
 export const api = axios.create({ baseURL: API });
