@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: salesia-enterprise-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /docs
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: salesia-enterprise-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://TU-FRONTEND.vercel.app
+      - key: ENVIRONMENT
+        value: production
+
+databases:
+  - name: salesia-enterprise-db
+    databaseName: salesia
+    user: salesia

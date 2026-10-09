@@ -1,0 +1,5 @@
+-- La aplicación crea las tablas automáticamente al iniciar.
+-- Este archivo resume las entidades del plan:
+-- companies, roles, users, customers, categories, products,
+-- employees, sales, sale_details, payments, inventory,
+-- inventory_movements, statistical_analyses, insights, audit_logs.

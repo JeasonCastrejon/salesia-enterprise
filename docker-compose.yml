@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16
+    container_name: salesia-db
+    environment:
+      POSTGRES_DB: salesia
+      POSTGRES_USER: salesia
+      POSTGRES_PASSWORD: salesia
+    ports:
+      - "5432:5432"
+    volumes:
+      - salesia_pgdata:/var/lib/postgresql/data
+  backend:
+    build: ./backend
+    container_name: salesia-backend
+    environment:
+      DATABASE_URL: postgresql+psycopg2://salesia:salesia@db:5432/salesia
+      SECRET_KEY: change-this-in-production
+      CORS_ORIGINS: http://localhost:5173
+      ENVIRONMENT: development
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+  frontend:
+    build: ./frontend
+    container_name: salesia-frontend
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+volumes:
+  salesia_pgdata:
