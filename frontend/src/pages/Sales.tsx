@@ -198,8 +198,17 @@ export function Sales() {
         </div>
       )}
 
-      <div className="panel">
-        <h3>Historial de ventas</h3>
+      {/* NUEVO CONTENEDOR DEL HISTORIAL (Imagen 1) */}
+      <div className="panel sales-history-panel">
+        <div className="sales-history-heading">
+          <div>
+            <h3>Historial de ventas</h3>
+            <p>Consulta las operaciones registradas.</p>
+          </div>
+          <span className="sales-history-count">
+            {rows.length} operaciones
+          </span>
+        </div>
 
         <div className="tablewrap">
           <table>
@@ -222,15 +231,18 @@ export function Sales() {
               ) : (
                 rows.map((r) => (
                   <tr key={r.id}>
-                    <td>#{r.id}</td>
+                    {/* NUEVAS CELDAS CON CLASES DE ESTILO (Imagen 2) */}
+                    <td className="sales-id">#{r.id}</td>
                     <td>{getCustomerName(r)}</td>
-                    <td>S/ {Number(r.total ?? 0).toFixed(2)}</td>
+                    <td className="sales-amount">
+                      S/ {Number(r.total ?? 0).toFixed(2)}
+                    </td>
                     <td>
-                      <span className="badge">
+                      <span className="sales-status">
                         {r.status || "completed"}
                       </span>
                     </td>
-                    <td>
+                    <td className="sales-date">
                       {r.sale_date
                         ? String(r.sale_date).slice(0, 10)
                         : r.created_at
@@ -285,10 +297,8 @@ export function Sales() {
             </div>
 
             <form onSubmit={sell}>
-              {/* SELECTOR DE CLIENTE */}
               <div className="sale-field">
                 <span>Cliente</span>
-
                 <div className="sale-selection">
                   <div className="sale-selection-info">
                     <strong>
@@ -303,268 +313,14 @@ export function Sales() {
                       </small>
                     )}
                   </div>
-
-                  <button
-                    type="button"
-                    className="sale-select-button"
-                    onClick={() => openPicker("customer")}
-                  >
-                    Seleccionar cliente
-                  </button>
                 </div>
-              </div>
-
-              {/* SELECTOR DE PRODUCTO */}
-              <div className="sale-field">
-                <span>Producto</span>
-
-                <div className="sale-selection">
-                  <div className="sale-selection-info">
-                    <strong>
-                      {selectedProduct?.name || "Ningún producto seleccionado"}
-                    </strong>
-                    {selectedProduct && (
-                      <small>
-                        SKU: {selectedProduct.sku || "No indicado"} · Precio: S/{" "}
-                        {Number(selectedProduct.price ?? 0).toFixed(2)}
-                        {selectedProduct.stock != null
-                          ? ` · Stock: ${selectedProduct.stock}`
-                          : ""}
-                      </small>
-                    )}
-                  </div>
-
-                  <button
-                    type="button"
-                    className="sale-select-button"
-                    onClick={() => openPicker("product")}
-                  >
-                    Seleccionar producto
-                  </button>
-                </div>
-              </div>
-
-              <div className="sale-fields-row">
-                <label className="sale-field">
-                  Cantidad
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={qty}
-                    onChange={(e) => setQty(Number(e.target.value))}
-                    required
-                  />
-                </label>
-
-                <label className="sale-field">
-                  Fecha de venta
-                  <input
-                    type="date"
-                    value={saleDate}
-                    onChange={(e) => setSaleDate(e.target.value)}
-                    required
-                  />
-                </label>
-              </div>
-
-              {selectedProduct && (
-                <div className="sale-total-preview">
-                  <span>Subtotal estimado</span>
-                  <strong>
-                    S/{" "}
-                    {(
-                      Number(selectedProduct.price ?? 0) * Math.max(0, qty)
-                    ).toFixed(2)}
-                  </strong>
-                  <small>
-                    El total final lo calcula el backend con los impuestos configurados.
-                  </small>
-                </div>
-              )}
-
-              <div className="sale-modal-actions">
-                <button
-                  type="button"
-                  className="sale-cancel"
-                  disabled={saving}
-                  onClick={() => {
-                    setModalOpen(false);
-                    setPicker(null);
-                  }}
-                >
-                  Cancelar
-                </button>
-
-                <button
-                  type="submit"
-                  className="primary"
-                  disabled={saving}
-                >
-                  {saving ? "Guardando..." : "Guardar venta"}
-                </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      {/* VENTANA SECUNDARIA: TABLA DE SELECCIÓN */}
-      {picker && (
-        <div className="sale-picker-overlay">
-          <div
-            className="sale-picker-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="picker-title"
-          >
-            <div className="sale-modal-header">
-              <div>
-                <span className="eyebrow">SELECCIÓN</span>
-                <h2 id="picker-title">
-                  {picker === "customer"
-                    ? "Seleccionar cliente"
-                    : "Seleccionar producto"}
-                </h2>
-                <p>
-                  Busca en la tabla y selecciona el registro que necesitas.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="sale-close"
-                onClick={() => setPicker(null)}
-                aria-label="Cerrar selector"
-              >
-                ×
-              </button>
-            </div>
-
-            <input
-              className="sale-search"
-              type="search"
-              placeholder={
-                picker === "customer"
-                  ? "Buscar por nombre, correo, teléfono o ID..."
-                  : "Buscar por producto, SKU o precio..."
-              }
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              autoFocus
-            />
-
-            <div className="tablewrap sale-picker-table">
-              <table>
-                {picker === "customer" ? (
-                  <>
-                    <thead>
-                      <tr>
-                        <th>Nombre</th>
-                        <th>Correo</th>
-                        <th>Teléfono</th>
-                        <th>Acción</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredCustomers.length === 0 ? (
-                        <tr>
-                          <td colSpan={4} className="sale-empty-cell">
-                            No se encontraron clientes.
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredCustomers.map((c) => (
-                          <tr key={c.id}>
-                            <td>{c.name || "Sin nombre"}</td>
-                            <td>{c.email || "—"}</td>
-                            <td>{c.phone || "—"}</td>
-                            <td>
-                              <button
-                                type="button"
-                                className="sale-select-button"
-                                onClick={() => selectCustomer(c)}
-                              >
-                                Elegir
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </>
-                ) : (
-                  <>
-                    <thead>
-                      <tr>
-                        <th>Producto</th>
-                        <th>SKU</th>
-                        <th>Precio</th>
-                        <th>Stock</th>
-                        <th>Estado</th>
-                        <th>Acción</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredProducts.length === 0 ? (
-                        <tr>
-                          <td colSpan={6} className="sale-empty-cell">
-                            No se encontraron productos.
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredProducts.map((p) => {
-                          const inactive = p.active === false;
-                          const noStock =
-                            p.stock != null && Number(p.stock) <= 0;
-
-                          return (
-                            <tr key={p.id}>
-                              <td>{p.name || "Sin nombre"}</td>
-                              <td>{p.sku || "—"}</td>
-                              <td>
-                                S/ {Number(p.price ?? 0).toFixed(2)}
-                              </td>
-                              <td>{p.stock ?? "—"}</td>
-                              <td>
-                                {inactive
-                                  ? "Inactivo"
-                                  : noStock
-                                  ? "Sin stock"
-                                  : "Activo"}
-                              </td>
-                              <td>
-                                <button
-                                  type="button"
-                                  className="sale-select-button"
-                                  disabled={inactive || noStock}
-                                  onClick={() => selectProduct(p)}
-                                >
-                                  Elegir
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </>
-                )}
-              </table>
-            </div>
-
-            <div className="sale-modal-actions">
-              <button
-                type="button"
-                className="sale-cancel"
-                onClick={() => setPicker(null)}
-              >
-                Volver a la venta
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
+}
+
 }
