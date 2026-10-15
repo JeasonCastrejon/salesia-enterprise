@@ -198,7 +198,7 @@ export function Sales() {
         </div>
       )}
 
-      {/* NUEVO CONTENEDOR DEL HISTORIAL (Imagen 1) */}
+      {/* HISTORIAL CON NUEVAS CLASES (Imagen 1) */}
       <div className="panel sales-history-panel">
         <div className="sales-history-heading">
           <div>
@@ -231,7 +231,7 @@ export function Sales() {
               ) : (
                 rows.map((r) => (
                   <tr key={r.id}>
-                    {/* NUEVAS CELDAS CON CLASES DE ESTILO (Imagen 2) */}
+                    {/* CELDAS ACTUALIZADAS CON NUEVAS CLASES (Imagen 2) */}
                     <td className="sales-id">#{r.id}</td>
                     <td>{getCustomerName(r)}</td>
                     <td className="sales-amount">
@@ -257,7 +257,7 @@ export function Sales() {
         </div>
       </div>
 
-      {/* VENTANA PRINCIPAL DE VENTA */}
+      {/* VENTANA PRINCIPAL DE VENTA RESTAURADA POR COMPLETO */}
       {modalOpen && (
         <div
           className="sale-modal-overlay"
@@ -297,6 +297,7 @@ export function Sales() {
             </div>
 
             <form onSubmit={sell}>
+              {/* SELECTOR DE CLIENTE */}
               <div className="sale-field">
                 <span>Cliente</span>
                 <div className="sale-selection">
@@ -313,14 +314,36 @@ export function Sales() {
                       </small>
                     )}
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => openPicker("customer")}
+                    disabled={saving}
+                  >
+                    {cid ? "Cambiar" : "Seleccionar"}
+                  </button>
                 </div>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+
+              {/* SELECTOR DE PRODUCTO */}
+              <div className="sale-field">
+                <span>Producto</span>
+                <div className="sale-selection">
+                  <div className="sale-selection-info">
+                    <strong>
+                      {selectedProduct?.name || "Ningún producto seleccionado"}
+                    </strong>
+                    {selectedProduct && (
+                      <small>
+                        Precio: S/ {Number(selectedProduct.price || 0).toFixed(2)}
+                        {selectedProduct.stock != null ? ` · Stock: ${selectedProduct.stock}` : ""}
+                      </small>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openPicker("product")}
+                    disabled={saving}
+                  >
+
 
 }
