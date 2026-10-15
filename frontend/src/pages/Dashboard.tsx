@@ -1,148 +1,290 @@
 
+
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import {
-  LineChart,Line,BarChart,Bar,AreaChart,Area,PieChart,Pie,Cell,ResponsiveContainer,XAxis,YAxis,Tooltip,CartesianGrid,Legend,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Legend,
 } from "recharts";
 
-const COLORS = ["#2583d8", "#12b8a6", "#f59e0b", "#8b78e6", "#ef647c"];
+const COLORS = ["#168aad", "#20a486", "#f4a340", "#8174d8", "#e56b83"];
+
+const money = (value: unknown) =>
+  `S/ ${Number(value ?? 0).toLocaleString("es-PE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+const normalize = (data: any) =>
+  Array.isArray(data) ? data : data?.data ?? [];
 
 export function Dashboard() {
   const [d, setD] = useState<any>(null);
   const [series, setSeries] = useState<any[]>([]);
   const [insights, setInsights] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState("");
 
   useEffect(() => {
-    api.get("/dashboard/summary")
-      .then((r) => setD(r.data))
-      .catch((e) => console.error("Error en resumen:", e));
+    let active = true;
 
-    api.get("/dashboard/series")
-      .then((r) => setSeries(Array.isArray(r.data) ? r.data : []))
-      .catch((e) => console.error("Error en series:", e));
+    async function loadDashboard() {
+      setLoading(true);
+      setApiError("");
 
-    api.get("/insights")
-      .then((r) => setInsights(Array.isArray(r.data) ? r.data : []))
-      .catch((e) => console.error("Error en perspectivas:", e));
+      const results = await Promise.allSettled([
+        api.get("/dashboard/summary"),
+        api.get("/dashboard/series"),
+        api.get("/insights"),
+      ]);
+
+      if (!active) return;
+
+      const [summary, salesSeries, insightData] = results;
+
+      if (summary.status === "fulfilled") {
+        setD(summary.value.data?.data ?? summary.value.data);
+      } else {
+        setApiError("No se pudo cargar el resumen del negocio.");
+      }
+
+      if (salesSeries.status === "fulfilled") {
+        setSeries(normalize(salesSeries.value.data));
+      }
+
+      if (insightData.status === "fulfilled") {
+        setInsights(normalize(insightData.value.data));
+      }
+
+      setLoading(false);
+    }
+
+    loadDashboard();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  // Normalizar los datos que ya proporciona el backend.
-  const chartData = series.map((item) => ({
-    date: String(item.date ?? ""),
-    sales: Number(item.sales ?? 0),
-  }));
+  const chartData = series
+    .map((item) => ({
+      date: String(item.date ?? ""),
+      sales: Number(item.sales ?? 0),
+    }))
+    .filter((item) => Number.isFinite(item.sales))
+    .sort((a, b) => a.date.localeCompare(b.date));
 
-  // Agrupar las ventas por fecha para la gráfica circular.
-  const distribution = chartData.map((item) => ({
-    name: item.date || "Sin fecha",
-    value: Math.max(0, item.sales),
-  })).filter((item) => item.value > 0);
+  const distribution = chartData
+    .filter((item) => item.sales > 0)
+    .map((item) => ({
+      name: item.date || "Sin fecha",
+      value: item.sales,
+    }));
+
+  const commonAxis = {
+    tick: { fill: "#718096", fontSize: 12 },
+    axisLine: false,
+    tickLine: false,
+  };
+
+  const tooltipStyle = {
+    borderRadius: 12,
+    border: "1px solid #e2e8f0",
+    boxShadow: "0 8px 28px rgba(15, 23, 42, 0.10)",
+  };
 
   return (
-    <div>
-      <div className="pagehead">
+    <div className="dashboard-page">
+      <div className="pagehead dashboard-heading">
         <div>
-          <span className="eyebrow">RESUMEN EJECUTIVO</span>
-          <h1>Dashboard</h1>
-          <p>Visión general del negocio y sus indicadores.</p>
+          <span className="eyebrow">CENTRO DE CONTROL</span>
+          <h1>Dashboard ejecutivo</h1>
+          <p>Indicadores comerciales y evolución del negocio.</p>
+        </div>
+        <div className="dashboard-live">
+          <span className="dashboard-live-dot" />
+          Resumen del negocio
         </div>
       </div>
 
-      {/* TARJETAS ORIGINALES: SE CONSERVAN */}
-      <div className="cards">
+      {apiError && (
+        <div className="alert" role="alert">{apiError}</div>
+      )}
+
+      <div className="cards dashboard-kpis">
         <Card
-          label="Ingresos"
-          value={`S/ ${Number(d?.revenue ?? 0).toFixed(2)}`}
-          note="Ventas registradas"
+          label="Ingresos registrados"
+          value={money(d?.revenue)}
+          note="Importe de ventas reportado por la API"
+          accent="blue"
         />
         <Card
           label="Transacciones"
-          value={d?.sales_count ?? 0}
-          note="Operaciones"
+          value={Number(d?.sales_count ?? 0).toLocaleString("es-PE")}
+          note="Operaciones registradas"
+          accent="teal"
         />
         <Card
           label="Ticket promedio"
-          value={`S/ ${Number(d?.average_ticket ?? 0).toFixed(2)}`}
-          note="Media"
+          value={money(d?.average_ticket)}
+          note="Promedio por transacción"
+          accent="purple"
         />
         <Card
           label="Clientes"
-          value={d?.customers ?? 0}
-          note="Registrados"
+          value={Number(d?.customers ?? 0).toLocaleString("es-PE")}
+          note="Clientes registrados"
+          accent="orange"
         />
       </div>
 
-      {/* GRÁFICA ORIGINAL + PERSPECTIVAS ORIGINALES */}
-      <div className="grid2">
-        <div className="panel">
-          <h3>Evolución de ventas</h3>
-          <div className="chart">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip
-                  formatter={(value) => [
-                    `S/ ${Number(value).toFixed(2)}`,
-                    "Ventas",
-                  ]}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="sales"
-                  name="Ventas"
-                  stroke="#2583d8"
-                  strokeWidth={3}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="panel">
-          <h3>Perspectivas</h3>
-          {insights.map((x, i) => (
-            <div className="insight" key={i}>
-              <b>{x.title}</b>
-              <p>{x.message}</p>
-              <small>{x.evidence}</small>
-            </div>
-          ))}
-          {insights.length === 0 && (
-            <p>No hay perspectivas disponibles.</p>
-          )}
+      <div className="dashboard-section-heading">
+        <div>
+          <h2>Rendimiento comercial</h2>
+          <p>Consulta los ingresos por fecha y las principales tendencias.</p>
         </div>
       </div>
 
-      {/* NUEVAS GRÁFICAS */}
-      <div className="dashboard-charts">
-        {/* GRÁFICA 2: BARRAS */}
-        <div className="panel">
-          <h3>Comparación de ventas por fecha</h3>
-          <p className="chart-description">
-            Comparación de los importes registrados en cada fecha.
-          </p>
-          <div className="chart">
-            {chartData.length > 0 ? (
+      <div className="grid2 dashboard-primary-grid">
+        <div className="panel dashboard-panel">
+          <div className="dashboard-panel-heading">
+            <div>
+              <h3>Evolución de ventas</h3>
+              <p>Importe registrado en cada fecha disponible.</p>
+            </div>
+            <span className="chart-tag">TENDENCIA</span>
+          </div>
+
+          <div className="chart dashboard-chart">
+            {loading ? (
+              <Empty text="Cargando ventas..." />
+            ) : chartData.length ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
+                <LineChart
+                  data={chartData}
+                  margin={{ top: 15, right: 12, left: 8, bottom: 5 }}
+                >
+                  <CartesianGrid
+                    vertical={false}
+                    stroke="#edf1f7"
+                    strokeDasharray="4 4"
+                  />
+                  <XAxis dataKey="date" {...commonAxis} tickMargin={12} />
+                  <YAxis
+                    {...commonAxis}
+                    tickFormatter={(v) => `S/ ${Number(v).toLocaleString("es-PE")}`}
+                    width={85}
+                  />
                   <Tooltip
-                    formatter={(value) => [
-                      `S/ ${Number(value).toFixed(2)}`,
-                      "Ventas",
-                    ]}
+                    contentStyle={tooltipStyle}
+                    formatter={(v) => [money(v), "Ventas"]}
+                    labelFormatter={(label) => `Fecha: ${label}`}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="sales"
+                    name="Ventas"
+                    stroke="#168aad"
+                    strokeWidth={3}
+                    dot={{ r: 3, fill: "#168aad", strokeWidth: 0 }}
+                    activeDot={{ r: 6, stroke: "#fff", strokeWidth: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <Empty text="Todavía no hay ventas para representar." />
+            )}
+          </div>
+        </div>
+
+        <div className="panel dashboard-panel">
+          <div className="dashboard-panel-heading">
+            <div>
+              <h3>Perspectivas del negocio</h3>
+              <p>Observaciones generadas por el sistema.</p>
+            </div>
+            <span className="chart-tag">ANÁLISIS</span>
+          </div>
+
+          <div className="dashboard-insights">
+            {insights.length ? (
+              insights.map((item, index) => (
+                <div className="insight dashboard-insight" key={item.id ?? index}>
+                  <span className="insight-number">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <b>{item.title || "Perspectiva comercial"}</b>
+                    <p>{item.message || "No hay descripción disponible."}</p>
+                    {item.evidence && <small>{item.evidence}</small>}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <Empty text="No hay perspectivas disponibles actualmente." />
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="dashboard-section-heading">
+        <div>
+          <h2>Visualización de indicadores</h2>
+          <p>Distintas perspectivas de los mismos datos comerciales.</p>
+        </div>
+      </div>
+
+      <div className="dashboard-charts">
+        <div className="panel dashboard-panel">
+          <div className="dashboard-panel-heading">
+            <div>
+              <h3>Comparación por fecha</h3>
+              <p>Importes de venta en cada periodo disponible.</p>
+            </div>
+          </div>
+
+          <div className="chart dashboard-chart">
+            {chartData.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 12, right: 8, left: 8, bottom: 5 }}
+                >
+                  <CartesianGrid
+                    vertical={false}
+                    stroke="#edf1f7"
+                    strokeDasharray="4 4"
+                  />
+                  <XAxis dataKey="date" {...commonAxis} tickMargin={10} />
+                  <YAxis
+                    {...commonAxis}
+                    tickFormatter={(v) => `S/ ${Number(v).toLocaleString("es-PE")}`}
+                    width={85}
+                  />
+                  <Tooltip
+                    contentStyle={tooltipStyle}
+                    formatter={(v) => [money(v), "Ventas"]}
+                    labelFormatter={(label) => `Fecha: ${label}`}
                   />
                   <Bar
                     dataKey="sales"
                     name="Ventas"
-                    fill="#12b8a6"
-                    radius={[5, 5, 0, 0]}
+                    fill="#20a486"
+                    radius={[6, 6, 0, 0]}
+                    maxBarSize={42}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -152,33 +294,51 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* GRÁFICA 3: ÁREA */}
-        <div className="panel">
-          <h3>Tendencia de ingresos</h3>
-          <p className="chart-description">
-            Vista de área para identificar subidas y bajadas.
-          </p>
-          <div className="chart">
-            {chartData.length > 0 ? (
+        <div className="panel dashboard-panel">
+          <div className="dashboard-panel-heading">
+            <div>
+              <h3>Tendencia de ingresos</h3>
+              <p>Área visual para identificar variaciones.</p>
+            </div>
+          </div>
+
+          <div className="chart dashboard-chart">
+            {chartData.length ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
+                <AreaChart
+                  data={chartData}
+                  margin={{ top: 12, right: 12, left: 8, bottom: 5 }}
+                >
+                  <defs>
+                    <linearGradient id="salesAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#8174d8" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="#8174d8" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    vertical={false}
+                    stroke="#edf1f7"
+                    strokeDasharray="4 4"
+                  />
+                  <XAxis dataKey="date" {...commonAxis} tickMargin={10} />
+                  <YAxis
+                    {...commonAxis}
+                    tickFormatter={(v) => `S/ ${Number(v).toLocaleString("es-PE")}`}
+                    width={85}
+                  />
                   <Tooltip
-                    formatter={(value) => [
-                      `S/ ${Number(value).toFixed(2)}`,
-                      "Ventas",
-                    ]}
+                    contentStyle={tooltipStyle}
+                    formatter={(v) => [money(v), "Ventas"]}
+                    labelFormatter={(label) => `Fecha: ${label}`}
                   />
                   <Area
                     type="monotone"
                     dataKey="sales"
-                    name="Ventas"
-                    stroke="#8b78e6"
-                    fill="#c4b5fd"
-                    fillOpacity={0.45}
-                    strokeWidth={2}
+                    name="Ingresos"
+                    stroke="#8174d8"
+                    strokeWidth={2.5}
+                    fill="url(#salesAreaGradient)"
+                    activeDot={{ r: 5 }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -188,14 +348,16 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* GRÁFICA 4: CIRCULAR */}
-        <div className="panel">
-          <h3>Distribución de ventas por fecha</h3>
-          <p className="chart-description">
-            Participación de cada fecha en el importe representado.
-          </p>
-          <div className="chart">
-            {distribution.length > 0 ? (
+        <div className="panel dashboard-panel dashboard-pie-panel">
+          <div className="dashboard-panel-heading">
+            <div>
+              <h3>Participación por fecha</h3>
+              <p>Porcentaje del importe total representado.</p>
+            </div>
+          </div>
+
+          <div className="chart dashboard-chart">
+            {distribution.length ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -203,11 +365,11 @@ export function Dashboard() {
                     dataKey="value"
                     nameKey="name"
                     cx="50%"
-                    cy="50%"
-                    outerRadius={90}
-                    label={({ name, percent }) =>
-                      `${name}: ${(Number(percent) * 100).toFixed(1)}%`
-                    }
+                    cy="46%"
+                    innerRadius={57}
+                    outerRadius={91}
+                    paddingAngle={3}
+                    stroke="none"
                   >
                     {distribution.map((item, index) => (
                       <Cell
@@ -217,12 +379,14 @@ export function Dashboard() {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value) => [
-                      `S/ ${Number(value).toFixed(2)}`,
-                      "Ventas",
-                    ]}
+                    contentStyle={tooltipStyle}
+                    formatter={(v) => [money(v), "Ventas"]}
                   />
-                  <Legend />
+                  <Legend
+                    verticalAlign="bottom"
+                    iconType="circle"
+                    iconSize={8}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -235,20 +399,26 @@ export function Dashboard() {
   );
 }
 
-function Card({ label, value, note }: any) {
+function Card({ label, value, note, accent }: any) {
   return (
-    <div className="card">
-      <span>{label}</span>
+    <div className={`card dashboard-kpi dashboard-kpi-${accent}`}>
+      <div className="dashboard-kpi-top">
+        <span>{label}</span>
+        <span className="dashboard-kpi-dot" />
+      </div>
       <strong>{value}</strong>
       <small>{note}</small>
     </div>
   );
 }
 
-function Empty() {
+function Empty({ text = "No hay datos disponibles para esta gráfica." }: { text?: string }) {
   return (
-    <div className="chart-empty">
-      No hay datos disponibles para esta gráfica.
+    <div className="chart-empty dashboard-empty">
+      <span className="dashboard-empty-icon">—</span>
+      <strong>{text}</strong>
+      <small>Los datos aparecerán cuando estén disponibles en la API.</small>
     </div>
   );
 }
+
