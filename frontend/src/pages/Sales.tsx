@@ -197,7 +197,7 @@ export function Sales() {
         </div>
       )}
 
-      {/* MODIFICACIÓN: Nuevo contenedor del historial con las clases solicitadas */}
+      {/* MODIFICACIÓN EXCLUSIVA: Contenedor del historial con las clases solicitadas */}
       <div className="panel sales-history-panel">
         <div className="sales-history-heading">
           <div>
@@ -230,7 +230,7 @@ export function Sales() {
               ) : (
                 rows.map((r) => (
                   <tr key={r.id}>
-                    {/* MODIFICACIÓN: Celdas con las clases correspondientes */}
+                    {/* MODIFICACIÓN EXCLUSIVA: Celdas con las clases correspondientes */}
                     <td className="sales-id">#{r.id}</td>
                     <td>{getCustomerName(r)}</td>
                     <td className="sales-amount">
@@ -256,7 +256,7 @@ export function Sales() {
         </div>
       </div>
 
-      {/* VENTANA PRINCIPAL DE VENTA (Tu formulario original completo sin cambios) */}
+      {/* VENTANA PRINCIPAL DE VENTA (Mantenido exactamente igual a tu código original) */}
       {modalOpen && (
         <div
           className="sale-modal-overlay"
