@@ -43,3 +43,171 @@
   }
 }
 
+
+
+/* Ventana de registro de ventas */
+.sale-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(11, 23, 48, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.sale-modal {
+  width: min(100%, 600px);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+  animation: saleModalIn 0.18s ease-out;
+}
+
+.sale-modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.sale-modal-header h2 {
+  color: #14213d;
+  font-size: 25px;
+  margin: 7px 0;
+}
+
+.sale-modal-header p {
+  color: #758197;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.sale-close {
+  border: 0;
+  background: #f1f5f9;
+  color: #475569;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.sale-field {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.sale-field input,
+.sale-field select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid #d6deea;
+  border-radius: 9px;
+  background: #fff;
+  color: #14213d;
+  outline: none;
+}
+
+.sale-field input:focus,
+.sale-field select:focus {
+  border-color: #19b7d9;
+  box-shadow: 0 0 0 3px rgba(25, 183, 217, 0.12);
+}
+
+.sale-fields-row {
+  display: flex;
+  gap: 16px;
+}
+
+.sale-total-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  margin: 2px 0 22px;
+  border: 1px solid #d9eef5;
+  border-radius: 12px;
+  background: #f3fbfd;
+}
+
+.sale-total-preview span,
+.sale-total-preview small {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.sale-total-preview strong {
+  color: #14213d;
+  font-size: 24px;
+}
+
+.sale-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid #edf0f5;
+}
+
+.sale-cancel {
+  border: 1px solid #d6deea;
+  background: #fff;
+  color: #475569;
+  border-radius: 9px;
+  padding: 11px 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sale-modal-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@keyframes saleModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 600px) {
+  .sale-modal {
+    padding: 20px;
+  }
+
+  .sale-fields-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .sale-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .sale-modal-actions button {
+    width: 100%;
+  }
+}
+
+
