@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { api } from "../api";
 
@@ -7,6 +8,14 @@ function todayLocal() {
     .toISOString()
     .slice(0, 10);
 }
+
+function normalize(data: any): any[] {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+}
+
+type PickerType = "customer" | "product" | null;
 
 export function Sales() {
   const [rows, setRows] = useState<any[]>([]);
@@ -18,65 +27,83 @@ export function Sales() {
   const [qty, setQty] = useState(1);
   const [saleDate, setSaleDate] = useState(todayLocal());
 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [picker, setPicker] = useState<PickerType>(null);
+  const [search, setSearch] = useState("");
+
   const [msg, setMsg] = useState("");
   const [error, setError] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [picker, setPicker] = useState<"customer" | "product" | null>(null);
-  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const load = async () => {
+  async function loadSales() {
     try {
       const r = await api.get("/sales");
-      setRows(Array.isArray(r.data) ? r.data : r.data?.data || []);
+      setRows(normalize(r.data));
     } catch (e) {
       console.error("Error al cargar ventas:", e);
+      setError(true);
+      setMsg("No se pudo cargar el historial de ventas.");
     }
-  };
+  }
+
+  async function loadCatalogs() {
+    setLoading(true);
+
+    try {
+      const [customerResponse, productResponse] = await Promise.all([
+        api.get("/customers"),
+        api.get("/products"),
+      ]);
+
+      setCustomers(normalize(customerResponse.data));
+      setProducts(normalize(productResponse.data));
+    } catch (e) {
+      console.error("Error al cargar los catálogos:", e);
+      setError(true);
+      setMsg("No se pudieron cargar los clientes o productos.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    load();
-
-    api.get("/customers")
-      .then((r) =>
-        setCustomers(Array.isArray(r.data) ? r.data : r.data?.data || [])
-      )
-      .catch((e) => console.error("Error al cargar clientes:", e));
-
-    api.get("/products")
-      .then((r) =>
-        setProducts(Array.isArray(r.data) ? r.data : r.data?.data || [])
-      )
-      .catch((e) => console.error("Error al cargar productos:", e));
+    loadSales();
+    loadCatalogs();
   }, []);
 
-  const selectedCustomer = customers.find(
+  const customer = customers.find(
     (c) => String(c.id) === cid
   );
 
-  const selectedProduct = products.find(
+  const product = products.find(
     (p) => String(p.id) === pid
   );
 
   const filteredCustomers = customers.filter((c) =>
     [
+      c.id,
       c.name,
       c.email,
       c.phone,
-      c.id,
-    ].some((v) =>
-      String(v ?? "").toLowerCase().includes(search.toLowerCase())
+      c.document_number,
+    ].some((value) =>
+      String(value ?? "")
+        .toLowerCase()
+        .includes(search.trim().toLowerCase())
     )
   );
 
   const filteredProducts = products.filter((p) =>
     [
+      p.id,
       p.name,
       p.sku,
-      p.id,
       p.price,
-    ].some((v) =>
-      String(v ?? "").toLowerCase().includes(search.toLowerCase())
+    ].some((value) =>
+      String(value ?? "")
+        .toLowerCase()
+        .includes(search.trim().toLowerCase())
     )
   );
 
@@ -85,34 +112,45 @@ export function Sales() {
     setPicker(type);
   }
 
-  function selectCustomer(customer: any) {
-    setCid(String(customer.id));
+  function closeModal() {
+    if (saving) return;
+    setModalOpen(false);
     setPicker(null);
     setSearch("");
   }
 
-  function selectProduct(product: any) {
-    setPid(String(product.id));
-    setPicker(null);
-    setSearch("");
+  function getCustomerName(row: any) {
+    if (row.customer?.name) return row.customer.name;
+
+    const found = customers.find(
+      (c) => Number(c.id) === Number(row.customer_id)
+    );
+
+    return found?.name || `Cliente #${row.customer_id ?? "—"}`;
   }
 
-  async function sell(e: any) {
+  async function sell(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMsg("");
     setError(false);
 
-    if (!cid || !pid || !saleDate || !Number.isInteger(qty) || qty < 1) {
-      setMsg("Selecciona un cliente, un producto, una cantidad válida y una fecha.");
+    if (!cid || !pid || !saleDate) {
+      setMsg("Selecciona un cliente, un producto y una fecha.");
+      setError(true);
+      return;
+    }
+
+    if (!Number.isInteger(qty) || qty < 1) {
+      setMsg("La cantidad debe ser un número entero mayor que cero.");
       setError(true);
       return;
     }
 
     if (
-      selectedProduct?.stock != null &&
-      Number(selectedProduct.stock) < qty
+      product?.stock != null &&
+      Number(product.stock) < qty
     ) {
-      setMsg(`Stock insuficiente. Disponible: ${selectedProduct.stock}.`);
+      setMsg(`Stock insuficiente. Disponible: ${product.stock}.`);
       setError(true);
       return;
     }
@@ -120,7 +158,7 @@ export function Sales() {
     setSaving(true);
 
     try {
-      const r = await api.post("/sales", {
+      const response = await api.post("/sales", {
         customer_id: Number(cid),
         items: [
           {
@@ -133,12 +171,14 @@ export function Sales() {
         sale_date: saleDate,
       });
 
-      const saleData = r.data?.data || r.data;
+      const result = response.data?.data ?? response.data;
+      const total = Number(result.total ?? 0);
 
       setMsg(
-        `Venta #${saleData.id ?? "registrada"} creada correctamente. Total: S/ ${Number(saleData.total ?? 0).toFixed(2)}`
+        `Venta #${result.id ?? "registrada"} creada correctamente. Total: S/ ${total.toFixed(2)}`
       );
       setError(false);
+
       setModalOpen(false);
       setPicker(null);
       setCid("");
@@ -146,26 +186,17 @@ export function Sales() {
       setQty(1);
       setSaleDate(todayLocal());
 
-      await load();
-    } catch (err: any) {
+      await Promise.all([loadSales(), loadCatalogs()]);
+    } catch (e: any) {
+      console.error("Error al registrar la venta:", e);
       setMsg(
-        err.response?.data?.detail ||
-          "No se pudo registrar la venta. Comprueba los datos e inténtalo de nuevo."
+        e.response?.data?.detail ??
+          "No se pudo registrar la venta. Comprueba los datos y la API."
       );
       setError(true);
     } finally {
       setSaving(false);
     }
-  }
-
-  function getCustomerName(row: any) {
-    if (row.customer?.name) return row.customer.name;
-
-    const customer = customers.find(
-      (c) => Number(c.id) === Number(row.customer_id)
-    );
-
-    return customer?.name || "Cliente de la venta";
   }
 
   return (
@@ -211,6 +242,7 @@ export function Sales() {
                 <th>Fecha</th>
               </tr>
             </thead>
+
             <tbody>
               {rows.length === 0 ? (
                 <tr>
@@ -219,22 +251,24 @@ export function Sales() {
                   </td>
                 </tr>
               ) : (
-                rows.map((r) => (
-                  <tr key={r.id}>
-                    <td>#{r.id}</td>
-                    <td>{getCustomerName(r)}</td>
-                    <td>S/ {Number(r.total ?? 0).toFixed(2)}</td>
+                rows.map((row) => (
+                  <tr key={row.id}>
+                    <td>#{row.id}</td>
+                    <td>{getCustomerName(row)}</td>
+                    <td>
+                      S/ {Number(row.total ?? 0).toFixed(2)}
+                    </td>
                     <td>
                       <span className="badge">
-                        {r.status || "completed"}
+                        {row.status || "completed"}
                       </span>
                     </td>
                     <td>
-                      {r.sale_date
-                        ? String(r.sale_date).slice(0, 10)
-                        : r.created_at
-                        ? new Date(r.created_at).toLocaleDateString()
-                        : "Reciente"}
+                      {row.sale_date
+                        ? String(row.sale_date).slice(0, 10)
+                        : row.created_at
+                        ? new Date(row.created_at).toLocaleDateString("es-PE")
+                        : "—"}
                     </td>
                   </tr>
                 ))
@@ -244,68 +278,312 @@ export function Sales() {
         </div>
       </div>
 
-      {/* VENTANA PRINCIPAL DE VENTA */}
       {modalOpen && (
         <div
           className="sale-modal-overlay"
           onMouseDown={(e) => {
-            if (e.target === e.currentTarget && !picker && !saving) {
-              setModalOpen(false);
+            if (
+              e.target === e.currentTarget &&
+              !picker &&
+              !saving
+            ) {
+              closeModal();
             }
           }}
         >
-          <div
+          <section
             className="sale-modal"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="sale-modal-title"
+            aria-labelledby="sale-title"
           >
-            <div className="sale-modal-header">
+            <header className="sale-modal-header">
               <div>
                 <span className="eyebrow">NUEVA OPERACIÓN</span>
-                <h2 id="sale-modal-title">Registrar venta</h2>
-                <p>Selecciona los datos de la operation.</p>
+                <h2 id="sale-title">Registrar venta</h2>
+                <p>Selecciona los datos de la operación.</p>
+              </div>
+
+              <button
+                type="button"
+                className="sale-close"
+                onClick={closeModal}
+                disabled={saving}
+                aria-label="Cerrar"
+              >
+                ×
+              </button>
+            </header>
+
+            <form onSubmit={sell}>
+              <div className="sale-field">
+                <label>Cliente</label>
+                <button
+                  type="button"
+                  className="sale-picker-trigger"
+                  onClick={() => openPicker("customer")}
+                >
+                  <span>
+                    <strong>
+                      {customer?.name || "Seleccionar cliente"}
+                    </strong>
+                    <small>
+                      {customer
+                        ? customer.email || customer.phone || `ID: ${customer.id}`
+                        : "Buscar en el catálogo de clientes"}
+                    </small>
+                  </span>
+                  <span>⌕</span>
+                </button>
+              </div>
+
+              <div className="sale-field">
+                <label>Producto</label>
+                <button
+                  type="button"
+                  className="sale-picker-trigger"
+                  onClick={() => openPicker("product")}
+                >
+                  <span>
+                    <strong>
+                      {product?.name || "Seleccionar producto"}
+                    </strong>
+                    <small>
+                      {product
+                        ? `S/ ${Number(product.price ?? 0).toFixed(2)} · Stock: ${product.stock ?? "—"}`
+                        : "Buscar en el catálogo de productos"}
+                    </small>
+                  </span>
+                  <span>⌕</span>
+                </button>
+              </div>
+
+              <div className="sale-form-grid">
+                <div className="sale-field">
+                  <label htmlFor="sale-qty">Cantidad</label>
+                  <input
+                    id="sale-qty"
+                    type="number"
+                    min="1"
+                    step="1"
+                    required
+                    value={qty}
+                    onChange={(e) => setQty(Number(e.target.value))}
+                  />
+                </div>
+
+                <div className="sale-field">
+                  <label htmlFor="sale-date">Fecha de venta</label>
+                  <input
+                    id="sale-date"
+                    type="date"
+                    required
+                    value={saleDate}
+                    onChange={(e) => setSaleDate(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {product && (
+                <div className="sale-total">
+                  <span>Subtotal estimado</span>
+                  <strong>
+                    S/ {(Number(product.price ?? 0) * qty).toFixed(2)}
+                  </strong>
+                  <small>
+                    El total definitivo puede incluir el impuesto del 18%.
+                  </small>
+                </div>
+              )}
+
+              <div className="sale-modal-actions">
+                <button
+                  type="button"
+                  className="sale-secondary-button"
+                  onClick={closeModal}
+                  disabled={saving}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="primary sale-save-button"
+                  disabled={saving || loading}
+                >
+                  {saving ? "Guardando..." : "Guardar venta"}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {picker && (
+        <div
+          className="sale-modal-overlay sale-picker-overlay"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) {
+              setPicker(null);
+              setSearch("");
+            }
+          }}
+        >
+          <section
+            className="sale-modal sale-picker-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="picker-title"
+          >
+            <header className="sale-modal-header">
+              <div>
+                <span className="eyebrow">CATÁLOGO</span>
+                <h2 id="picker-title">
+                  {picker === "customer"
+                    ? "Seleccionar cliente"
+                    : "Seleccionar producto"}
+                </h2>
+                <p>
+                  Busca y selecciona un registro de la tabla.
+                </p>
               </div>
 
               <button
                 type="button"
                 className="sale-close"
                 onClick={() => {
-                  if (!saving) {
-                    setModalOpen(false);
-                    setPicker(null);
-                  }
+                  setPicker(null);
+                  setSearch("");
                 }}
-                disabled={saving}
-                aria-label="Cerrar ventana"
+                aria-label="Cerrar selector"
               >
                 ×
               </button>
+            </header>
+
+            <input
+              className="sale-search"
+              type="search"
+              placeholder={
+                picker === "customer"
+                  ? "Buscar por nombre, correo, teléfono o ID..."
+                  : "Buscar por producto, SKU, precio o ID..."
+              }
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autoFocus
+            />
+
+            <div className="tablewrap sale-picker-table">
+              <table>
+                {picker === "customer" ? (
+                  <>
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Correo</th>
+                        <th>Teléfono</th>
+                        <th>Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredCustomers.map((c) => (
+                        <tr key={c.id}>
+                          <td>{c.id}</td>
+                          <td>{c.name}</td>
+                          <td>{c.email || "—"}</td>
+                          <td>{c.phone || "—"}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className="primary sale-select-button"
+                              onClick={() => {
+                                setCid(String(c.id));
+                                setPicker(null);
+                                setSearch("");
+                              }}
+                            >
+                              Seleccionar
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {filteredCustomers.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="sale-empty-cell">
+                            No se encontraron clientes.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </>
+                ) : (
+                  <>
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Producto</th>
+                        <th>SKU</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredProducts.map((p) => (
+                        <tr key={p.id}>
+                          <td>{p.id}</td>
+                          <td>{p.name}</td>
+                          <td>{p.sku || "—"}</td>
+                          <td>
+                            S/ {Number(p.price ?? 0).toFixed(2)}
+                          </td>
+                          <td>{p.stock ?? "—"}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className="primary sale-select-button"
+                              disabled={
+                                p.active === false ||
+                                (p.stock != null && Number(p.stock) < 1)
+                              }
+                              onClick={() => {
+                                setPid(String(p.id));
+                                setPicker(null);
+                                setSearch("");
+                              }}
+                            >
+                              Seleccionar
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {filteredProducts.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="sale-empty-cell">
+                            No se encontraron productos.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </>
+                )}
+              </table>
             </div>
 
-            <form onSubmit={sell}>
-              {/* SELECTOR DE CLIENTE */}
-              <div className="sale-field">
-                <span>Cliente</span>
-
-                <div className="sale-selection">
-                  <div className="sale-selection-info">
-                    <strong>
-                      {selectedCustomer?.name || "Ningún cliente seleccionado"}
-                    </strong>
-                    {selectedCustomer && (
-                      <small>
-                        {selectedCustomer.email || ""}
-                        {selectedCustomer.phone
-                          ? ` · ${selectedCustomer.phone}`
-                          : ""}
-                      </small>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </form>
-          </div>
+            <div className="sale-modal-actions">
+              <button
+                type="button"
+                className="sale-secondary-button"
+                onClick={() => {
+                  setPicker(null);
+                  setSearch("");
+                }}
+              >
+                Volver a la venta
+              </button>
+            </div>
+          </section>
         </div>
       )}
     </div>
