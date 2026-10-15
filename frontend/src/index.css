@@ -1451,3 +1451,251 @@
   }
 }
 
+
+/* Botón pequeño para abrir el formulario de venta */
+.sale-open-button {
+  align-self: flex-start;
+  padding: 9px 13px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* Fondo de las ventanas emergentes */
+.sale-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(9, 20, 40, 0.62);
+  backdrop-filter: blur(4px);
+  overflow-y: auto;
+}
+
+.sale-modal {
+  width: min(100%, 560px);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #e4e9f2;
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2);
+}
+
+.sale-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 25px;
+}
+
+.sale-modal-header h2 {
+  margin: 7px 0;
+  color: #14213d;
+}
+
+.sale-modal-header p {
+  margin: 0;
+  color: #758197;
+  font-size: 14px;
+}
+
+.sale-close {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 9px;
+  background: #f0f3f8;
+  color: #536176;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.sale-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.sale-field > label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #34435b;
+}
+
+.sale-picker-trigger {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  padding: 14px;
+  text-align: left;
+  border: 1px solid #dce3ed;
+  border-radius: 10px;
+  background: #fff;
+  color: #14213d;
+  cursor: pointer;
+}
+
+.sale-picker-trigger:hover {
+  border-color: #19b7d9;
+  background: #f8fcfd;
+}
+
+.sale-picker-trigger strong,
+.sale-picker-trigger small {
+  display: block;
+}
+
+.sale-picker-trigger small {
+  margin-top: 5px;
+  color: #758197;
+  overflow-wrap: anywhere;
+}
+
+.sale-picker-trigger > span:last-child {
+  font-size: 23px;
+  color: #168aad;
+}
+
+.sale-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 15px;
+}
+
+.sale-field input,
+.sale-search {
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #d6deea;
+  border-radius: 9px;
+  background: #fff;
+  color: #14213d;
+  outline: none;
+}
+
+.sale-field input:focus,
+.sale-search:focus {
+  border-color: #19b7d9;
+}
+
+.sale-total {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 15px;
+  margin: 5px 0 20px;
+  border-radius: 10px;
+  background: #f2f9fb;
+  color: #52627a;
+}
+
+.sale-total strong {
+  color: #14213d;
+  font-size: 24px;
+}
+
+.sale-total small {
+  font-size: 12px;
+}
+
+.sale-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.sale-secondary-button {
+  padding: 10px 15px;
+  border: 1px solid #d6deea;
+  border-radius: 9px;
+  background: #fff;
+  color: #34435b;
+  cursor: pointer;
+}
+
+.sale-save-button {
+  padding: 10px 16px;
+}
+
+.sale-picker-overlay {
+  z-index: 1010;
+}
+
+.sale-picker-modal {
+  width: min(100%, 950px);
+}
+
+.sale-search {
+  margin-bottom: 17px;
+}
+
+.sale-picker-table {
+  max-height: 48vh;
+  overflow: auto;
+  border: 1px solid #e8edf4;
+  border-radius: 10px;
+}
+
+.sale-picker-table table {
+  min-width: 650px;
+}
+
+.sale-picker-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f5f8fc;
+}
+
+.sale-picker-table td {
+  font-size: 13px;
+}
+
+.sale-select-button {
+  padding: 8px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.sale-empty-cell {
+  padding: 28px;
+  text-align: center;
+  color: #758197;
+}
+
+@media (max-width: 600px) {
+  .sale-modal-overlay {
+    padding: 10px;
+  }
+
+  .sale-modal {
+    padding: 18px;
+    max-height: calc(100vh - 20px);
+  }
+
+  .sale-form-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .sale-modal-actions > button {
+    flex: 1;
+  }
+
+  .sale-open-button {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+}
