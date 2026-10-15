@@ -1,5 +1,4 @@
 
-
 import { useState } from "react";
 import { api } from "../api";
 import {
@@ -10,45 +9,33 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
+  Cell,
 } from "recharts";
 
-type BayesResult = {
-  posterior: number;
-};
-
 export function Probability() {
-  // P(B|A): probabilidad de observar B cuando ocurre A
-  const [likelihood, setLikelihood] = useState(0.8);
+  const [pBGivenA, setPBGivenA] = useState(0.8);
+  const [pA, setPA] = useState(0.3);
+  const [pB, setPB] = useState(0.5);
 
-  // P(A): probabilidad previa del evento A
-  const [prior, setPrior] = useState(0.3);
-
-  // P(B): probabilidad total de observar la evidencia B
-  const [evidence, setEvidence] = useState(0.5);
-
-  const [result, setResult] = useState<BayesResult | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const numerator = likelihood * prior;
-  const preview = evidence > 0 ? numerator / evidence : 0;
-
-  const valid =
-    [likelihood, prior, evidence].every(
-      (v) => Number.isFinite(v) && v >= 0 && v <= 1
-    ) &&
-    evidence > 0 &&
-    numerator <= evidence;
-
-  async function calculate() {
+  async function calculate(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setError("");
     setResult(null);
 
-    if (!valid) {
-      setError(
-        "Revisa los valores. Las probabilidades deben estar entre 0 y 1, P(B) debe ser mayor que cero y P(B|A) × P(A) no puede superar P(B)."
-      );
+    if (
+      ![pBGivenA, pA, pB].every(Number.isFinite) ||
+      pBGivenA < 0 ||
+      pBGivenA > 1 ||
+      pA < 0 ||
+      pA > 1 ||
+      pB <= 0 ||
+      pB > 1
+    ) {
+      setError("Introduce probabilidades válidas entre 0 y 1. P(B) debe ser mayor que 0.");
       return;
     }
 
@@ -56,287 +43,276 @@ export function Probability() {
 
     try {
       const response = await api.post("/probability/bayes", {
-        p_b_given_a: likelihood,
-        p_a: prior,
-        p_b: evidence,
+        p_b_given_a: pBGivenA,
+        p_a: pA,
+        p_b: pB,
       });
 
       const data = response.data?.data ?? response.data;
-      const posterior = Number(data.posterior);
+      const posterior = Number(data?.posterior);
 
       if (!Number.isFinite(posterior) || posterior < 0 || posterior > 1) {
-        throw new Error("La API devolvió un resultado no válido.");
+        throw new Error("La API devolvió un resultado inválido.");
       }
 
-      setResult({ posterior });
+      setResult(posterior);
     } catch (err: any) {
       setError(
         err.response?.data?.detail ||
-          err.message ||
-          "No se pudo calcular Bayes. Comprueba la conexión con el backend."
+        err.message ||
+        "No se pudo calcular. Comprueba la conexión con el servidor."
       );
     } finally {
       setLoading(false);
     }
   }
 
-  const posterior = result?.posterior ?? preview;
+  const chartData =
+    result === null
+      ? []
+      : [
+          {
+            name: "Probabilidad inicial",
+            value: pA * 100,
+            color: "#94a3b8",
+          },
+          {
+            name: "Probabilidad posterior",
+            value: result * 100,
+            color: "#19b7d9",
+          },
+        ];
 
-  const chartData = [
-    { name: "Probabilidad previa", valor: prior * 100 },
-    { name: "Evidencia P(B)", valor: evidence * 100 },
-    { name: "Verosimilitud", valor: likelihood * 100 },
-    { name: "Posterior P(A|B)", valor: posterior * 100 },
-  ];
+  const difference = result === null ? 0 : (result - pA) * 100;
 
-  const difference = result
-    ? (result.posterior - prior) * 100
-    : 0;
+  const interpretation =
+    difference > 0.01
+      ? "La evidencia incrementa la probabilidad del evento."
+      : difference < -0.01
+        ? "La evidencia reduce la probabilidad del evento."
+        : "La probabilidad se mantiene prácticamente igual.";
 
   return (
-    <div>
+    <div className="prob-page">
       <div className="pagehead">
         <div>
-          <span className="eyebrow">ANALÍTICA AVANZADA</span>
-          <h1>Probabilidad empresarial</h1>
-          <p>
-            Evalúa escenarios comerciales utilizando el Teorema de Bayes.
-          </p>
+          <span className="eyebrow">ANALÍTICA EMPRESARIAL</span>
+          <h1>Teorema de Bayes</h1>
+          <p>Actualiza probabilidades a partir de nueva evidencia.</p>
         </div>
-      </div>
-
-      <div className="bayes-intro">
-        <div>
-          <span className="eyebrow">MOTOR DE PROBABILIDAD</span>
-          <h2>Actualización de probabilidades</h2>
-          <p>
-            Introduce tus estimaciones y observa cómo cambia la probabilidad
-            de un evento cuando se incorpora nueva evidencia.
-          </p>
-        </div>
-        <div className="bayes-formula">
-          P(A|B) = P(B|A) × P(A) / P(B)
-        </div>
-      </div>
-
-      <div className="bayes-kpis">
-        <div className="bayes-kpi">
-          <span>Probabilidad previa</span>
-          <strong>{(prior * 100).toFixed(1)}%</strong>
-          <small>Estimación inicial de A</small>
-        </div>
-
-        <div className="bayes-kpi">
-          <span>Evidencia observada</span>
-          <strong>{(evidence * 100).toFixed(1)}%</strong>
-          <small>Probabilidad de B</small>
-        </div>
-
-        <div className="bayes-kpi">
-          <span>Probabilidad posterior</span>
-          <strong>
-            {result ? (result.posterior * 100).toFixed(2) + "%" : "—"}
-          </strong>
-          <small>
-            {result ? "Resultado calculado por la API" : "Pendiente de cálculo"}
-          </small>
+        <div className="bayes-status">
+          <span className="bayes-status-dot" />
+          Motor estadístico
         </div>
       </div>
 
       <div className="bayes-layout">
-        <section className="panel bayes-config">
-          <span className="eyebrow">CONFIGURACIÓN DEL ESCENARIO</span>
-          <h3>Parámetros de análisis</h3>
-
-          <p className="bayes-help">
-            Ejemplo: A = un cliente compra; B = el cliente responde
-            a una campaña comercial.
-          </p>
-
-          <label className="bayes-field">
-            <span>
-              P(B|A) <small>Verosimilitud</small>
-            </span>
-            <input
-              type="number"
-              min="0"
-              max="1"
-              step="0.01"
-              value={likelihood}
-              onChange={(e) => {
-                setLikelihood(Number(e.target.value));
-                setResult(null);
-              }}
-            />
-            <small>
-              Probabilidad de observar B cuando ocurre A.
-            </small>
-          </label>
-
-          <label className="bayes-field">
-            <span>
-              P(A) <small>Probabilidad previa</small>
-            </span>
-            <input
-              type="number"
-              min="0"
-              max="1"
-              step="0.01"
-              value={prior}
-              onChange={(e) => {
-                setPrior(Number(e.target.value));
-                setResult(null);
-              }}
-            />
-            <small>
-              Probabilidad inicial de que ocurra A.
-            </small>
-          </label>
-
-          <label className="bayes-field">
-            <span>
-              P(B) <small>Evidencia total</small>
-            </span>
-            <input
-              type="number"
-              min="0.01"
-              max="1"
-              step="0.01"
-              value={evidence}
-              onChange={(e) => {
-                setEvidence(Number(e.target.value));
-                setResult(null);
-              }}
-            />
-            <small>
-              Probabilidad total de observar B; debe ser mayor que cero.
-            </small>
-          </label>
-
-          {error && <div className="bayes-error">{error}</div>}
-
-          <button
-            className="primary bayes-calculate"
-            onClick={calculate}
-            disabled={loading}
-          >
-            {loading ? "Calculando..." : "Calcular y analizar"}
-          </button>
-
-          <small className="bayes-footnote">
-            Los valores deben representar probabilidades coherentes
-            con el mismo escenario.
-          </small>
-        </section>
-
-        <section className="panel bayes-chart-panel">
-          <div className="bayes-section-heading">
+        <section className="panel bayes-form-panel">
+          <div className="bayes-section-title">
             <div>
-              <span className="eyebrow">VISUALIZACIÓN</span>
-              <h3>Comparativa de probabilidades</h3>
+              <h3>Parámetros del análisis</h3>
+              <p>Introduce valores entre 0 y 1.</p>
             </div>
-            <span className="bayes-tag">Escala 0–100%</span>
+            <span className="bayes-icon">ƒ</span>
           </div>
 
-          <div className="bayes-chart">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                margin={{ top: 15, right: 12, left: 0, bottom: 15 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e7edf5" />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fontSize: 11, fill: "#68778e" }}
-                  angle={-12}
-                  textAnchor="end"
-                  height={65}
-                  interval={0}
-                />
-                <YAxis
-                  domain={[0, 100]}
-                  tickFormatter={(v) => `${v}%`}
-                  tick={{ fontSize: 11, fill: "#68778e" }}
-                />
-                <Tooltip
-                  formatter={(value) => [
-                    `${Number(value).toFixed(2)}%`,
-                    "Probabilidad",
-                  ]}
-                />
-                <Legend />
-                <Bar
-                  dataKey="valor"
-                  name="Probabilidad"
-                  fill="#159bb9"
-                  radius={[6, 6, 0, 0]}
-                  maxBarSize={58}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <form onSubmit={calculate}>
+            <label className="bayes-field">
+              <span>Probabilidad condicional</span>
+              <small>P(B|A)</small>
+              <input
+                type="number"
+                min="0"
+                max="1"
+                step="0.01"
+                value={pBGivenA}
+                onChange={(e) => {
+                  setPBGivenA(Number(e.target.value));
+                  setResult(null);
+                }}
+                required
+              />
+            </label>
 
-          <p className="bayes-chart-note">
-            La probabilidad posterior se confirma al pulsar
-            «Calcular y analizar». Antes de calcular, el gráfico muestra
-            una estimación local basada en los parámetros introducidos.
-          </p>
+            <label className="bayes-field">
+              <span>Probabilidad inicial</span>
+              <small>P(A)</small>
+              <input
+                type="number"
+                min="0"
+                max="1"
+                step="0.01"
+                value={pA}
+                onChange={(e) => {
+                  setPA(Number(e.target.value));
+                  setResult(null);
+                }}
+                required
+              />
+            </label>
+
+            <label className="bayes-field">
+              <span>Probabilidad de la evidencia</span>
+              <small>P(B)</small>
+              <input
+                type="number"
+                min="0.01"
+                max="1"
+                step="0.01"
+                value={pB}
+                onChange={(e) => {
+                  setPB(Number(e.target.value));
+                  setResult(null);
+                }}
+                required
+              />
+            </label>
+
+            <div className="bayes-formula">
+              <span>FÓRMULA APLICADA</span>
+              <strong>P(A|B) = P(B|A) × P(A) / P(B)</strong>
+            </div>
+
+            {error && (
+              <div className="alert" role="alert">
+                {error}
+              </div>
+            )}
+
+            <button
+              className="primary bayes-calculate"
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? "Calculando..." : "Calcular probabilidad"}
+            </button>
+          </form>
         </section>
-      </div>
 
-      <section className="panel bayes-analysis">
-        <span className="eyebrow">INTERPRETACIÓN DEL RESULTADO</span>
-        <h3>Conclusión del análisis</h3>
+        <section className="bayes-results">
+          <div className="bayes-result-card">
+            <div className="bayes-result-heading">
+              <span>PROBABILIDAD POSTERIOR</span>
+              <span className="bayes-result-symbol">P(A|B)</span>
+            </div>
 
-        {!result ? (
-          <p>
-            Configura el escenario y calcula el resultado para obtener
-            una interpretación cuantitativa.
-          </p>
-        ) : (
-          <>
             <div className="bayes-result-number">
-              {(result.posterior * 100).toFixed(2)}%
+              {result === null ? "—" : `${(result * 100).toFixed(2)}%`}
             </div>
 
             <p>
-              Dadas las probabilidades introducidas, la probabilidad
-              posterior de A cuando se observa B es{" "}
-              <strong>{(result.posterior * 100).toFixed(2)}%</strong>.
+              {result === null
+                ? "Ejecuta el análisis para obtener el resultado."
+                : "Probabilidad estimada después de considerar la evidencia."}
             </p>
 
-            <div className="bayes-comparison">
-              <div>
-                <small>Antes de la evidencia</small>
-                <strong>{(prior * 100).toFixed(2)}%</strong>
+            {result !== null && (
+              <div className="bayes-progress">
+                <div
+                  style={{ width: `${result * 100}%` }}
+                />
               </div>
+            )}
+          </div>
+
+          <div className="bayes-metrics">
+            <div className="bayes-metric">
+              <span>Inicial P(A)</span>
+              <strong>{(pA * 100).toFixed(1)}%</strong>
+            </div>
+            <div className="bayes-metric">
+              <span>Evidencia P(B)</span>
+              <strong>{(pB * 100).toFixed(1)}%</strong>
+            </div>
+            <div className="bayes-metric">
+              <span>Condicional P(B|A)</span>
+              <strong>{(pBGivenA * 100).toFixed(1)}%</strong>
+            </div>
+          </div>
+
+          <div className="panel bayes-chart-panel">
+            <div className="bayes-section-title">
               <div>
-                <small>Después de la evidencia</small>
-                <strong>{(result.posterior * 100).toFixed(2)}%</strong>
-              </div>
-              <div>
-                <small>Variación</small>
-                <strong>
-                  {difference > 0 ? "+" : ""}
-                  {difference.toFixed(2)} puntos porcentuales
-                </strong>
+                <h3>Impacto de la evidencia</h3>
+                <p>Comparación antes y después del análisis.</p>
               </div>
             </div>
 
-            <div className="bayes-business-note">
-              <strong>Aplicación empresarial</strong>
-              <p>
-                Utiliza este resultado como apoyo para evaluar campañas,
-                segmentación de clientes o escenarios de conversión.
-                La utilidad de la conclusión depende de que las
-                probabilidades de entrada procedan de datos fiables.
-                Este cálculo, por sí solo, no demuestra causalidad
-                ni predice automáticamente una compra real.
-              </p>
-            </div>
-          </>
-        )}
-      </section>
+            {result === null ? (
+              <div className="bayes-chart-empty">
+                <span className="bayes-empty-symbol">▥</span>
+                <strong>Gráfico de resultados</strong>
+                <span>Calcula una probabilidad para visualizar la comparación.</span>
+              </div>
+            ) : (
+              <div className="bayes-chart">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={chartData}
+                    margin={{ top: 15, right: 10, left: 0, bottom: 8 }}
+                  >
+                    <CartesianGrid
+                      stroke="#e8edf4"
+                      strokeDasharray="3 3"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 11, fill: "#758197" }}
+                      axisLine={false}
+                      tickLine={false}
+                      interval={0}
+                    />
+                    <YAxis
+                      domain={[0, 100]}
+                      tickFormatter={(value) => `${value}%`}
+                      tick={{ fontSize: 11, fill: "#758197" }}
+                      axisLine={false}
+                      tickLine={false}
+                      width={45}
+                    />
+                    <Tooltip
+                      formatter={(value: any) => [
+                        `${Number(value).toFixed(2)}%`,
+                        "Probabilidad",
+                      ]}
+                      contentStyle={{
+                        borderRadius: 10,
+                        border: "1px solid #e4e9f2",
+                      }}
+                    />
+                    <Bar
+                      dataKey="value"
+                      name="Probabilidad"
+                      radius={[7, 7, 0, 0]}
+                      maxBarSize={90}
+                    >
+                      {chartData.map((item) => (
+                        <Cell key={item.name} fill={item.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {result !== null && (
+              <div className="bayes-interpretation">
+                <span className="bayes-interpretation-label">
+                  <span className="bayes-status-dot" />
+                  INTERPRETACIÓN
+                </span>
+                <strong>{interpretation}</strong>
+                <span>
+                  Variación respecto al valor inicial:{" "}
+                  {difference > 0 ? "+" : ""}
+                  {difference.toFixed(2)} puntos porcentuales.
+                </span>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
