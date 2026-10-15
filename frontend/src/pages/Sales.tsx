@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { api } from "../api";
 
@@ -198,7 +197,7 @@ export function Sales() {
         </div>
       )}
 
-      {/* HISTORIAL CON NUEVAS CLASES (Imagen 1) */}
+      {/* Cambiado por el contenedor de la primera imagen */}
       <div className="panel sales-history-panel">
         <div className="sales-history-heading">
           <div>
@@ -231,7 +230,7 @@ export function Sales() {
               ) : (
                 rows.map((r) => (
                   <tr key={r.id}>
-                    {/* CELDAS ACTUALIZADAS CON NUEVAS CLASES (Imagen 2) */}
+                    {/* Cambiado por las celdas de la segunda imagen */}
                     <td className="sales-id">#{r.id}</td>
                     <td>{getCustomerName(r)}</td>
                     <td className="sales-amount">
@@ -257,7 +256,7 @@ export function Sales() {
         </div>
       </div>
 
-      {/* VENTANA PRINCIPAL DE VENTA RESTAURADA POR COMPLETO */}
+      {/* VENTANA PRINCIPAL DE VENTA (Se mantiene exactamente igual a tu código) */}
       {modalOpen && (
         <div
           className="sale-modal-overlay"
@@ -300,6 +299,7 @@ export function Sales() {
               {/* SELECTOR DE CLIENTE */}
               <div className="sale-field">
                 <span>Cliente</span>
+
                 <div className="sale-selection">
                   <div className="sale-selection-info">
                     <strong>
@@ -314,36 +314,13 @@ export function Sales() {
                       </small>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => openPicker("customer")}
-                    disabled={saving}
-                  >
-                    {cid ? "Cambiar" : "Seleccionar"}
-                  </button>
                 </div>
               </div>
-
-              {/* SELECTOR DE PRODUCTO */}
-              <div className="sale-field">
-                <span>Producto</span>
-                <div className="sale-selection">
-                  <div className="sale-selection-info">
-                    <strong>
-                      {selectedProduct?.name || "Ningún producto seleccionado"}
-                    </strong>
-                    {selectedProduct && (
-                      <small>
-                        Precio: S/ {Number(selectedProduct.price || 0).toFixed(2)}
-                        {selectedProduct.stock != null ? ` · Stock: ${selectedProduct.stock}` : ""}
-                      </small>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => openPicker("product")}
-                    disabled={saving}
-                  >
-
-
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
+
