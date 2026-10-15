@@ -719,3 +719,735 @@
 
 
 
+/* ==================================================
+   SALESIA ENTERPRISE - DASHBOARD PROFESIONAL
+   ================================================== */
+
+.dashboard-page,
+.analytics-page {
+  min-width: 0;
+}
+
+.dashboard-heading {
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dashboard-heading h1,
+.analytics-page .pagehead h1 {
+  letter-spacing: -0.8px;
+}
+
+.dashboard-live {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 13px;
+  border: 1px solid #dce8ef;
+  border-radius: 9px;
+  background: #fff;
+  color: #53647a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dashboard-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #20a486;
+  box-shadow: 0 0 0 4px rgba(32, 164, 134, 0.12);
+}
+
+.dashboard-kpis {
+  gap: 16px;
+}
+
+.dashboard-kpi {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  padding: 21px;
+  border-radius: 14px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.dashboard-kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(25, 45, 75, 0.08);
+}
+
+.dashboard-kpi::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #168aad;
+}
+
+.dashboard-kpi-teal::before {
+  background: #20a486;
+}
+
+.dashboard-kpi-purple::before {
+  background: #8174d8;
+}
+
+.dashboard-kpi-orange::before {
+  background: #f4a340;
+}
+
+.dashboard-kpi-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-kpi-top > span:first-child {
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.dashboard-kpi-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  border-radius: 50%;
+  background: #168aad;
+  opacity: 0.8;
+}
+
+.dashboard-kpi-teal .dashboard-kpi-dot {
+  background: #20a486;
+}
+
+.dashboard-kpi-purple .dashboard-kpi-dot {
+  background: #8174d8;
+}
+
+.dashboard-kpi-orange .dashboard-kpi-dot {
+  background: #f4a340;
+}
+
+.dashboard-kpi strong {
+  overflow-wrap: anywhere;
+  font-size: clamp(21px, 2vw, 28px);
+  letter-spacing: -0.7px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-kpi small {
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.dashboard-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 30px 0 16px;
+}
+
+.dashboard-section-heading h2 {
+  margin: 0 0 6px;
+  color: #14213d;
+  font-size: 19px;
+  letter-spacing: -0.35px;
+}
+
+.dashboard-section-heading p {
+  margin: 0;
+  color: #758197;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.dashboard-primary-grid {
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.dashboard-panel {
+  min-width: 0;
+  padding: 23px;
+  border-radius: 15px;
+}
+
+.dashboard-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.dashboard-panel-heading h3 {
+  margin: 0 0 7px;
+  color: #172943;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.dashboard-panel-heading p {
+  margin: 0;
+  color: #8290a4;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.chart-tag {
+  flex-shrink: 0;
+  padding: 6px 8px;
+  border: 1px solid #dcecf2;
+  border-radius: 6px;
+  background: #f5fafc;
+  color: #16819c;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+}
+
+.dashboard-chart {
+  height: 300px;
+  min-width: 0;
+}
+
+.dashboard-charts {
+  align-items: stretch;
+  gap: 18px;
+}
+
+.dashboard-charts > .panel {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.dashboard-insights {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dashboard-insight {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid #e7edf4;
+  border-left: 3px solid #168aad;
+  border-radius: 10px;
+  background: #fbfdff;
+}
+
+.insight-number {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #e7f6fa;
+  color: #087f99;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.dashboard-insight > div {
+  min-width: 0;
+}
+
+.dashboard-insight b {
+  display: block;
+  color: #263750;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.dashboard-insight p {
+  margin: 5px 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-insight small {
+  display: block;
+  color: #8b98aa;
+  font-size: 10px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-empty {
+  height: 100%;
+  min-height: 210px;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
+}
+
+.dashboard-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #f0f5fa;
+  color: #718096;
+  font-size: 24px;
+}
+
+.dashboard-empty strong {
+  color: #526176;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dashboard-empty small {
+  max-width: 250px;
+  color: #94a0b1;
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* ==================================================
+   SALESIA ENTERPRISE - ANALYTICS
+   ================================================== */
+
+.analytics-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.4fr);
+  align-items: stretch;
+  gap: 18px;
+}
+
+.analytics-form-panel,
+.analytics-chart-panel {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.analytics-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.analytics-input {
+  display: block;
+  width: 100%;
+  min-height: 86px;
+  resize: vertical;
+  padding: 12px 13px;
+  border: 1px solid #d6deea;
+  border-radius: 10px;
+  outline: none;
+  background: #fbfdff;
+  color: #14213d;
+  line-height: 1.6;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.analytics-input:focus {
+  border-color: #19b7d9;
+  box-shadow: 0 0 0 3px rgba(25, 183, 217, 0.11);
+}
+
+.analytics-input-hint {
+  margin-top: 7px;
+  color: #8290a4;
+  font-size: 11px;
+}
+
+.analytics-calculate {
+  width: 100%;
+  margin-top: 16px;
+  min-height: 42px;
+  font-size: 12px;
+}
+
+.analytics-calculate:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.analytics-alert {
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+.analytics-result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 20px;
+}
+
+.analytics-metric {
+  min-width: 0;
+  padding: 12px 10px;
+  border: 1px solid #e4eaf2;
+  border-radius: 10px;
+  background: #f9fbfd;
+}
+
+.analytics-metric span {
+  display: block;
+  color: #758197;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.analytics-metric strong {
+  display: block;
+  margin-top: 8px;
+  color: #14213d;
+  font-size: clamp(13px, 1.4vw, 18px);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.analytics-success {
+  margin-top: 14px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.analytics-chart {
+  height: 300px;
+  min-width: 0;
+}
+
+.analytics-section-heading {
+  margin-top: 30px;
+}
+
+.analytics-charts > .panel {
+  margin-bottom: 0;
+}
+
+.analytics-interpretation {
+  margin-top: 20px;
+}
+
+.analytics-interpretation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.analytics-interpretation-grid > div {
+  padding: 15px;
+  border: 1px solid #e5ebf3;
+  border-radius: 10px;
+  background: #fbfdff;
+}
+
+.analytics-interpretation-grid span {
+  color: #16819c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.analytics-interpretation-grid p {
+  margin: 8px 0 0;
+  color: #718096;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.analytics-deviation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 10px;
+  background: #f2f8fb;
+}
+
+.analytics-deviation > span {
+  color: #53647a;
+  font-size: 12px;
+}
+
+.analytics-deviation strong {
+  color: #087f99;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.analytics-deviation small {
+  width: 100%;
+  color: #8290a4;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+/* ==================================================
+   TABLAS Y SELECTORES DE VENTAS
+   ================================================== */
+
+.sale-open-button {
+  padding: 8px 12px;
+  font-size: 13px;
+  box-shadow: 0 3px 8px rgba(14, 159, 190, 0.12);
+}
+
+.sale-open-button:hover,
+.primary:hover {
+  filter: brightness(0.96);
+}
+
+.sale-modal,
+.sale-picker-modal {
+  border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.sale-modal {
+  width: min(100%, 640px);
+}
+
+.sale-picker-modal {
+  width: min(100%, 1050px);
+}
+
+.sale-picker-table thead th {
+  z-index: 1;
+  background: #f5f8fc;
+  white-space: nowrap;
+}
+
+.sale-picker-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.sale-picker-table tbody tr:hover {
+  background: #f6fbfd;
+}
+
+.sale-picker-table td {
+  color: #394960;
+  font-size: 12px;
+}
+
+.sale-select-button {
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.sale-select-button:focus-visible,
+.sale-cancel:focus-visible,
+.sale-close:focus-visible,
+.sale-open-button:focus-visible {
+  outline: 3px solid rgba(25, 183, 217, 0.3);
+  outline-offset: 2px;
+}
+
+.sale-selection {
+  min-height: 68px;
+}
+
+.sale-selection-info strong {
+  font-size: 13px;
+}
+
+.sale-modal-actions .primary {
+  font-size: 12px;
+}
+
+.sale-modal-actions .sale-cancel {
+  font-size: 12px;
+}
+
+.sale-modal .sale-field input {
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.sale-modal .sale-field input:focus {
+  border-color: #19b7d9;
+  box-shadow: 0 0 0 3px rgba(25, 183, 217, 0.11);
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .dashboard-primary-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .analytics-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .dashboard-heading {
+    align-items: flex-start;
+  }
+
+  .dashboard-live {
+    align-self: flex-start;
+  }
+
+  .dashboard-kpi {
+    padding: 17px;
+  }
+
+  .dashboard-panel {
+    padding: 17px;
+  }
+
+  .dashboard-section-heading {
+    margin-top: 23px;
+  }
+
+  .dashboard-chart,
+  .analytics-chart {
+    height: 260px;
+  }
+
+  .analytics-result-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-metric {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .analytics-metric strong {
+    margin-top: 0;
+    text-align: right;
+  }
+
+  .analytics-interpretation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sale-modal-overlay {
+    padding: 10px;
+  }
+
+  .sale-modal {
+    max-height: calc(100vh - 20px);
+  }
+
+  .sale-modal-header h2 {
+    font-size: 21px;
+  }
+}
+
+/* Historial de ventas: presentación empresarial */
+
+.sales-history-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.sales-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 24px;
+  border-bottom: 1px solid #e9eef5;
+}
+
+.sales-history-heading h3 {
+  margin: 0;
+  color: #172943;
+  font-size: 15px;
+}
+
+.sales-history-heading p {
+  margin: 6px 0 0;
+  color: #8290a4;
+  font-size: 12px;
+}
+
+.sales-history-count {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #e8f8fb;
+  color: #087f99;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.sales-history-panel .tablewrap {
+  overflow-x: auto;
+}
+
+.sales-history-panel table {
+  min-width: 600px;
+}
+
+.sales-history-panel th {
+  padding: 14px 20px;
+  background: #f8fafc;
+  white-space: nowrap;
+}
+
+.sales-history-panel td {
+  padding: 15px 20px;
+  color: #43536a;
+  font-size: 12px;
+}
+
+.sales-history-panel tbody tr:hover {
+  background: #f8fbfd;
+}
+
+.sales-id {
+  color: #16819c;
+  font-weight: 800;
+}
+
+.sales-amount {
+  color: #172943;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.sales-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 20px;
+  background: #e8f8ed;
+  color: #25814b;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.sales-date {
+  color: #718096;
+  white-space: nowrap;
+}
+
+@media (max-width: 650px) {
+  .sales-history-heading {
+    padding: 17px;
+  }
+
+  .sales-history-panel td,
+  .sales-history-panel th {
+    padding: 12px;
+  }
+}
+
