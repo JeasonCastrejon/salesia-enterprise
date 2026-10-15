@@ -197,17 +197,8 @@ export function Sales() {
         </div>
       )}
 
-      {/* MODIFICACIÓN EXCLUSIVA: Contenedor del historial con las clases solicitadas */}
-      <div className="panel sales-history-panel">
-        <div className="sales-history-heading">
-          <div>
-            <h3>Historial de ventas</h3>
-            <p>Consulta las operaciones registradas.</p>
-          </div>
-          <span className="sales-history-count">
-            {rows.length} operaciones
-          </span>
-        </div>
+      <div className="panel">
+        <h3>Historial de ventas</h3>
 
         <div className="tablewrap">
           <table>
@@ -230,18 +221,15 @@ export function Sales() {
               ) : (
                 rows.map((r) => (
                   <tr key={r.id}>
-                    {/* MODIFICACIÓN EXCLUSIVA: Celdas con las clases correspondientes */}
-                    <td className="sales-id">#{r.id}</td>
+                    <td>#{r.id}</td>
                     <td>{getCustomerName(r)}</td>
-                    <td className="sales-amount">
-                      S/ {Number(r.total ?? 0).toFixed(2)}
-                    </td>
+                    <td>S/ {Number(r.total ?? 0).toFixed(2)}</td>
                     <td>
-                      <span className="sales-status">
+                      <span className="badge">
                         {r.status || "completed"}
                       </span>
                     </td>
-                    <td className="sales-date">
+                    <td>
                       {r.sale_date
                         ? String(r.sale_date).slice(0, 10)
                         : r.created_at
@@ -256,7 +244,7 @@ export function Sales() {
         </div>
       </div>
 
-      {/* VENTANA PRINCIPAL DE VENTA (Mantenido exactamente igual a tu código original) */}
+      {/* VENTANA PRINCIPAL DE VENTA */}
       {modalOpen && (
         <div
           className="sale-modal-overlay"
@@ -276,7 +264,7 @@ export function Sales() {
               <div>
                 <span className="eyebrow">NUEVA OPERACIÓN</span>
                 <h2 id="sale-modal-title">Registrar venta</h2>
-                <p>Selecciona los datos de la operación.</p>
+                <p>Selecciona los datos de la operation.</p>
               </div>
 
               <button
@@ -323,6 +311,3 @@ export function Sales() {
     </div>
   );
 }
-
-}
-
